@@ -31,6 +31,16 @@ class Data:
         for j in range(6):
             self.max[j] = max(data_temp[j])
 
+        self.min[3] = 50
+        self.max[3] = 600
+
+        # self.min[3] = 163.5
+        # self.max[3] = 351.6
+        # self.min = [163.5, 163.5, 163.5, 163.5, 163.5, 163.5]
+        # self.max = [351.6, 351.6, 351.6, 351.6, 351.6, 351.6]
+
+        # for ORP
+
     # количество секунд данных, индекс ответного значения, количество данных
     # через какое количество времени мы предсказываем данные
     def create_date_set(self, out_data, index_par, col, time, f):
@@ -67,18 +77,54 @@ class Data:
             self.data_set.append(temp)
 
 
+class Clean_data:
+    len = 0
+    max = 0
+    min = 0
+
+    def __init__(self, patch):
+        self.data = []
+        self.data_set = []
+        self.answer = []
+        self.lying = []
+
+        with open(f"{patch}") as f:
+            while True:
+                text_data = f.readline()
+                if not text_data:
+                    break
+                self.data.append(float(text_data.replace(",", ".")))
+
+        self.len = len(self.data)
+        self.max = max(self.data)
+        self.min = min(self.data)
+        self.min = 50
+        self.max = 600
+
+    def normalization(self, out_data, time):
+        for i in range(self.len - out_data - time):
+            temp = []
+            for j in range(out_data):
+                temp.append((self.data[i + j + 1] - self.min) / (
+                            self.max - self.min))
+
+            temp_valur = (self.data[i + time + out_data] - self.min) / (
+                        self.max - self.min)
+            self.answer.append(temp_valur)
+            self.data_set.append(temp)
+
+    def lying_test(self, l):
+        for i in range(len(self.answer) - l):
+            self.lying.append(self.answer[i + l])
+
+
 if __name__ == "__main__":
-    a = Data()
-    a.create_date_set_1_par(4000, 3, 1, 1)
-    b = Data()
-    b.create_date_set_1_par(4000, 2, 1, 1)
-    # a.f(10, 100, 5)
+    a = Clean_data("data\orp\\3_day.txt")
+    a.normalization(1, 1000)
+    a.lying_test(1000)
 
-    print(a.answer)
-    print(b.answer)
-    # print(a.data_set[0])
-
-    # plt.plot(a.data_set[0])
-    plt.plot(b.data_set[0])
+    plt.plot(a.answer)
+    plt.plot(a.lying)
     plt.grid(True)
     plt.show()
+
